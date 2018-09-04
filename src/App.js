@@ -3,11 +3,13 @@ import { Switch, Route, Redirect } from 'react-router-dom'
 import axios from 'axios'
 import styled from 'styled-components'
 
+import Navbar from './components/NavBar/NavBar'
 import PrivateRoute from './containers/PrivateRoute/PrivateRoute'
 import Home from './containers/Home/Home'
 import Login from './containers/Login/Login'
 import Register from './containers/Register/Register'
-import Navbar from './components/NavBar/NavBar'
+import Picks from './containers/Picks/Picks'
+
 
 
 const AppBody = styled.div`
@@ -23,6 +25,7 @@ class App extends Component {
         <Navbar />
         <Switch>
           <PrivateRoute exact path="/" component={Home} />
+          <PrivateRoute exact path="/my-picks" component={Picks} />
           <Route exact path="/login" component={Login} />
           <Route exact path="/register" component={Register} />
         </Switch>
