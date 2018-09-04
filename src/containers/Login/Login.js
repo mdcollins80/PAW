@@ -4,6 +4,35 @@ import { login } from '../../actions/auth'
 import { loginErrors } from '../../reducers/auth'
 import { isAuthenticated } from '../../reducers/'
 import { Redirect } from 'react-router'
+import styled from 'styled-components'
+
+const LoginBox = styled.div`
+  border: 1px solid black;
+  margin: 75px auto;
+  text-align: center;
+  width: 80%;
+`
+
+const LoginInput = styled.input`
+  border: 1px solid black;
+  height: 25px;
+  margin-bottom: 10px;
+  width: 80%;
+`
+
+const LoginButton = styled.button`
+  border: 1px solid black;
+  height: 25px;
+  margin-bottom: 20px;
+  padding: 1px;
+  width: 80%;
+`
+
+const LoginForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
 
 class Login extends Component {
   state = {
@@ -28,23 +57,24 @@ class Login extends Component {
   
   render() {
     return(
-      <React.Fragment>
+      <LoginBox>
+        <h1>Log In</h1>
         {this.props.isAuthenticated ? 
           (<Redirect to="/"/>) : 
-          <form onSubmit={this.handleSubmit}>
-            <input placeholder="email" 
+          <LoginForm onSubmit={this.handleSubmit}>
+            <LoginInput placeholder="email" 
               name="email" 
               type="email"
               value={this.state.username} 
               onChange={this.handleChange}/>
-            <input placeholder="password" 
+            <LoginInput placeholder="password" 
               type="password" 
               name="password" 
               onChange={this.handleChange}/>
-              <button onClick={this.handleSubmit}/>
-          </form>
-          }
-      </React.Fragment>
+            <LoginButton onClick={this.handleSubmit}>Login</LoginButton>
+          </LoginForm>
+        }
+      </LoginBox>
     )
   }
 }
