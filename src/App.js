@@ -9,6 +9,8 @@ import PrivateRoute from './containers/PrivateRoute/PrivateRoute'
 import Home from './containers/Home/Home'
 import Login from './containers/Login/Login'
 
+import Navbar from './components/NavBar/NavBar'
+
 
 class App extends Component {
   state = {
@@ -18,9 +20,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <header className="App-header">
-          <h1 className="App-title">Pick a Winner</h1>
-        </header>
+        <Navbar />
         <Switch>
           <PrivateRoute exact path="/" component={Home} />
           <Route exact path="/login" component={Login} />
