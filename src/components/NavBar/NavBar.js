@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 
 const Header = styled.header`
@@ -8,6 +8,7 @@ const Header = styled.header`
   height: 75px;
   position: fixed;
   width: 100%;
+  top: 0;
 `
 
 const Menu = styled.ul`
