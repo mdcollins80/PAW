@@ -28,8 +28,8 @@ const navbar = (props) => {
   return (
     <Header>
       <Menu>
-        <MenuItem>My Account</MenuItem>
-        <MenuItem>My Leagues</MenuItem>
+        <MenuItem>My Team</MenuItem>
+        <MenuItem>My Picks</MenuItem>
         <MenuItem>Log In/Out</MenuItem> 
       </Menu>
     </Header>
