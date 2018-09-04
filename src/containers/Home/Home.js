@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import { Grid, Row, Col } from 'react-flexbox-grid'
 
 import H1 from '../../components/H1/H1'
+import Box from '../../components/Box/Box'
 
 const HomeContainer = styled.div`
 
@@ -14,12 +15,6 @@ const HomeContainer = styled.div`
 const Heading = styled.p`
   text-transform: uppercase;
   font-weight: bold;
-`
-
-const Box = styled(Grid)`
-  border: 1px solid black;
-  width: 90%;
-  margin: 75px auto;
 `
 
 const ColX = styled(Col)`
