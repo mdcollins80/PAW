@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import PrivateRoute from './containers/PrivateRoute/PrivateRoute'
 import Home from './containers/Home/Home'
 import Login from './containers/Login/Login'
+import Register from './containers/Register/Register'
 import Navbar from './components/NavBar/NavBar'
 
 
@@ -23,6 +24,7 @@ class App extends Component {
         <Switch>
           <PrivateRoute exact path="/" component={Home} />
           <Route exact path="/login" component={Login} />
+          <Route exact path="/register" component={Register} />
         </Switch>
       </AppBody>
     );

@@ -46,12 +46,6 @@ class Login extends Component {
     password: '',
   }
   
-  componentDidMount() {
-    console.log(this.props.isAuthenticated)
-    console.log(this.props)
-    console.log(this)
-  }
-  
   handleChange = (event) => {
     this.setState({[event.target.name]: event.target.value}, function() {})
   }
@@ -80,7 +74,7 @@ class Login extends Component {
             <LoginButton onClick={this.handleSubmit}>Login</LoginButton>
           </LoginForm>
         }
-        <NewAcctLink href="#">Register a New Account</NewAcctLink>
+        <NewAcctLink href="/register">Register a New Account</NewAcctLink>
       </LoginBox>
     )
   }
