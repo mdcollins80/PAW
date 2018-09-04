@@ -21,9 +21,9 @@ const MenuItem = styled.a`
 const navbar = (props) => {
   return (
     <Header>
-      <MenuItem>My Team</MenuItem>
+      <MenuItem>League</MenuItem>
       <MenuItem href="/my-picks">My Picks</MenuItem>
-      <MenuItem>Log In/Out</MenuItem> 
+      <MenuItem>League Picks</MenuItem> 
     </Header>
   )
 }
