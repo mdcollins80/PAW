@@ -10,7 +10,7 @@ const LoginBox = styled.div`
   border: 1px solid black;
   margin: 75px auto;
   text-align: center;
-  width: 80%;
+  width: 90%;
 `
 
 const LoginInput = styled.input`
@@ -32,6 +32,12 @@ const LoginForm = styled.form`
   display: flex;
   flex-direction: column;
   align-items: center;
+`
+
+const NewAcctLink = styled.a`
+  display: block;
+  margin-bottom: 20px;
+  text-decoration: none;
 `
 
 class Login extends Component {
@@ -74,6 +80,7 @@ class Login extends Component {
             <LoginButton onClick={this.handleSubmit}>Login</LoginButton>
           </LoginForm>
         }
+        <NewAcctLink href="#">Register a New Account</NewAcctLink>
       </LoginBox>
     )
   }
