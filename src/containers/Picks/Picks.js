@@ -8,6 +8,7 @@ import { Row, Col } from 'react-flexbox-grid'
 import Box from '../../components/Box/Box'
 import H1 from '../../components/H1/H1'
 import Select from '../../components/Select/Select'
+import Button from '../../components/Button/Button'
 
 const PicksContainer = styled.div`
   display: flex;
@@ -17,7 +18,12 @@ const PicksContainer = styled.div`
 
 const WeekPicker = styled(Select)`
 
-  
+`
+
+const GameRow = styled(Row)`
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 `
 
 class Picks extends Component {
@@ -55,17 +61,26 @@ class Picks extends Component {
         <WeekPicker options={this.state.weeks}
                     handleSelect={(event) => this.weekSelect(event.target.value)}/>
         <Box buffer='small'>
-          <Row>
-            <Col>
-              {this.state.games ? this.state.games.filter(game => game.week_num == this.state.selectedWeek)
-                .map(game => (
-                  <p>{game.__str__}</p>
-                )) : "loading.."
-              }
-            </Col>
-          </Row>
+            {this.state.games ? this.state.games.filter(game => game.week_num === parseInt(this.state.selectedWeek))
+              .map(game => (
+                <GameRow key={game.id}>
+                  <Col>
+                    <p>{game.id}</p>
+                  </Col>
+                  <Col>
+                    <p>{game.away_team.name}</p>
+                  </Col>
+                  <Col>
+                    @
+                  </Col>
+                  <Col>
+                    <p>{game.home_team.name}</p>
+                  </Col>
+                </GameRow>
+              )) : "loading.."
+            }
         </Box>
-        <button>Submit Picks</button>
+        <Button>Submit Picks</Button>
       </PicksContainer>
     )
   }

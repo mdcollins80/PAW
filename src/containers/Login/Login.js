@@ -6,6 +6,8 @@ import { isAuthenticated } from '../../reducers/'
 import { Redirect } from 'react-router'
 import styled from 'styled-components'
 
+import Button from '../../components/Button/Button'
+
 const LoginBox = styled.div`
   border: 1px solid black;
   margin: 75px auto;
@@ -17,14 +19,6 @@ const LoginInput = styled.input`
   border: 1px solid black;
   height: 25px;
   margin-bottom: 10px;
-  width: 80%;
-`
-
-const LoginButton = styled.button`
-  border: 1px solid black;
-  height: 25px;
-  margin-bottom: 20px;
-  padding: 1px;
   width: 80%;
 `
 
@@ -71,7 +65,7 @@ class Login extends Component {
               type="password" 
               name="password" 
               onChange={this.handleChange}/>
-            <LoginButton onClick={this.handleSubmit}>Login</LoginButton>
+            <Button onClick={this.handleSubmit}>Login</Button>
           </LoginForm>
         }
         <NewAcctLink href="/register">Register a New Account</NewAcctLink>
