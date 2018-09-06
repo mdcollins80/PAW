@@ -23,7 +23,7 @@ const navbar = (props) => {
     <Header>
       <MenuItem href="/">League</MenuItem>
       <MenuItem href="/my-picks">My Picks</MenuItem>
-      <MenuItem href="#">League Picks</MenuItem> 
+      <MenuItem href="/my-team">My Team</MenuItem> 
     </Header>
   )
 }
