@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { isAuthenticated, accessToken } from '../../reducers/'
 import axios from 'axios'
 import styled from 'styled-components'
-import { Grid, Row, Col } from 'react-flexbox-grid'
+import { Row, Col } from 'react-flexbox-grid'
 
 import H1 from '../../components/H1/H1'
 import Box from '../../components/Box/Box'
@@ -36,7 +36,7 @@ class Home extends Component {
       headers: {'Authorization': 'JWT ' + this.props.token}
     }
     
-    axios.get(process.env.REACT_APP_API_URL + `/api/userteams`, config)
+    axios.get(process.env.REACT_APP_API_URL + `/api/userteams/`, config)
       .then(response => {
         this.setState({userteams: response.data})
       })
