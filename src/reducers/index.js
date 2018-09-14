@@ -9,9 +9,11 @@ export default combineReducers({
 })
 
 export const isAuthenticated =
- state => fromAuth.isAuthenticated(state.auth)
+  state => fromAuth.isAuthenticated(state.auth)
 export const accessToken =
   state => fromAuth.accessToken(state.auth)
+export const theUser = 
+  state => fromAuth.theUser(state.auth)
 export const isAccessTokenExpired =
   state => fromAuth.isAccessTokenExpired(state.auth)
 export const refreshToken =

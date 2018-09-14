@@ -100,6 +100,12 @@ export function isAuthenticated(state) {
   return !isAccessTokenExpired(state)
 }
 
+export function theUser(state) {
+  if (state.access) {
+    return state.access.user_id
+  }
+}
+
 export function loginErrors(state) {
    return  state.loginErrors
 }
