@@ -61,7 +61,7 @@ class Picks extends Component {
         <WeekPicker options={this.state.weeks}
                     handleSelect={(event) => this.weekSelect(event.target.value)}/>
         <Box buffer='small'>
-            {this.state.games ? this.state.games.filter(game => game.week_num === parseInt(this.state.selectedWeek))
+            {this.state.games ? this.state.games.filter(game => game.week_num === parseInt(this.state.selectedWeek, 10))
               .map(game => (
                 <GameRow key={game.id}>
                   <Col>
