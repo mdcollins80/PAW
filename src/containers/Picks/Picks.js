@@ -9,6 +9,7 @@ import Box from '../../components/Box/Box'
 import H1 from '../../components/H1/H1'
 import Select from '../../components/Select/Select'
 import Button from '../../components/Button/Button'
+import Picker from '../../components/Picker/Picker'
 
 const PicksContainer = styled.div`
   display: flex;
@@ -47,9 +48,10 @@ class Picks extends Component {
     const config = {
       headers: {'Authorization': 'JWT ' + this.props.token}
     }
-    
+    console.log('componentDidMount')
     if (!JSON.parse(localStorage.getItem('games'))) {
-      axios.all([this.axiosGetRequest('/api/games/', config), this.axiosGetRequest('api/userpicks/', config)])
+      console.log('trying the axios dual get request')
+      axios.all([this.axiosGetRequest('/api/games/', config), this.axiosGetRequest('/api/userpicks/', config)])
         .then(axios.spread((games, picks) => {
           this.setState({games: games.data, picks: picks.data})
         }))
@@ -71,6 +73,28 @@ class Picks extends Component {
     this.setState({selectedWeek: week})
   }
   
+  onPickSelect = (gameID, pickID) => {
+    console.log("logging the event: " + gameID)
+    console.log("logging the team id: " + pickID)
+    
+  }
+  
+  isPickSelected = (gameID, pickID) => {
+    const picks = this.state.picks
+    if (picks) {
+      const pick = picks.filter(pick => {
+        return pick.game === gameID
+      })
+      if (pick[0]) {
+        if (pick[0].pick === pickID) {
+          return true
+        } else {
+          return false
+        }
+      }
+    }
+  }
+  
   render () {
     return (
       <PicksContainer>
@@ -85,13 +109,17 @@ class Picks extends Component {
                     <p>{game.id}</p>
                   </Col>
                   <Col>
-                    <p>{game.away_team.name}</p>
+                    <Picker clicked={() => this.onPickSelect(game.id, game.away_team.id)} 
+                            selected={this.isPickSelected(game.id, game.away_team.id)} 
+                            teamname={game.away_team.name} />
                   </Col>
                   <Col>
                     @
                   </Col>
                   <Col>
-                    <p>{game.home_team.name}</p>
+                    <Picker clicked={() => this.onPickSelect(game.id, game.home_team.id)} 
+                            selected={this.isPickSelected(game.id, game.home_team.id)} 
+                            teamname={game.home_team.name} />
                   </Col>
                 </GameRow>
               )) : "loading.."
