@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { isAuthenticated, accessToken } from '../../reducers/'
+import { isAuthenticated, accessToken, theUser } from '../../reducers/'
 import axios from 'axios'
 import styled from 'styled-components'
 import { Row, Col } from 'react-flexbox-grid'
@@ -32,14 +32,16 @@ class Picks extends Component {
     weeks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
     games: null,
     selectedWeek: 1,
-    picks: null
+    picks: null,
+    userteam: null
   }
   
-  // make the team names clickable.  onClick, check if a pick exists for this
-  // game already.  if it doesn't, POST request to select that team to win.
+  // onClick, check if a pick exists for this game already.  if it doesn't, 
+  // POST request to select that team to win...BUT NEEDS TO UPDATE PICKS IN STATE TO PREVENT MULTIPLE POSTS!!!
   // if it does, PATCH request to update the pick.  POST and PATCH if and only 
   // if it is NOT past kickoff time.
-  // pull the userpicks and highlight the teams they have chosen.
+  // pull the userpicks and highlight the teams they have chosen.  -- AGAIN, THIS WILL ONLY HAPPEN IF THE STATE.PICKS IS UPDATED
+  // 
   // when there is a winner for the game, highlight the row in green for a match
   // red for a wrong pick
   
@@ -51,15 +53,23 @@ class Picks extends Component {
     console.log('componentDidMount')
     if (!JSON.parse(localStorage.getItem('games'))) {
       console.log('trying the axios dual get request')
-      axios.all([this.axiosGetRequest('/api/games/', config), this.axiosGetRequest('/api/userpicks/', config)])
-        .then(axios.spread((games, picks) => {
-          this.setState({games: games.data, picks: picks.data})
+      axios.all([this.axiosGetRequest('/api/userteams/', config), this.axiosGetRequest('/api/games/', config), this.axiosGetRequest('/api/userpicks/', config)])
+        .then(axios.spread((teams, games, picks) => {
+          const userteam = teams.data.filter(team => {
+            return team.owner === this.props.userID
+          })
+          this.setState({userteam: userteam[0], games: games.data, picks: picks.data})
         }))
         .then(() => localStorage.setItem('games', JSON.stringify(this.state.games)))
         .catch(error => console.log(error))
     } else {
-      this.axiosGetRequest('/api/userpicks/', config)
-        .then(response => this.setState({picks: response.data}))
+      axios.all([this.axiosGetRequest('/api/userteams/', config), this.axiosGetRequest('/api/userpicks/', config)])
+        .then(axios.spread((teams, picks) => {
+          const userteam = teams.data.filter(team => {
+            return team.owner === this.props.userID
+          })
+          this.setState({userteam: userteam[0], picks: picks.data})
+        }))
         .catch(error => console.log(error))
       this.setState({games: JSON.parse(localStorage.getItem('games'))})
     }
@@ -69,14 +79,45 @@ class Picks extends Component {
     return axios.get(process.env.REACT_APP_API_URL + url, config)
   }
   
+  axiosPostPick = (data) => {
+    const config = {
+      headers: {'Authorization': 'JWT ' + this.props.token}
+    }
+    return axios.post(process.env.REACT_APP_API_URL + '/api/userpicks/', data, config)
+  }
+  
   weekSelect = (week) => {
     this.setState({selectedWeek: week})
   }
   
   onPickSelect = (gameID, pickID) => {
-    console.log("logging the event: " + gameID)
-    console.log("logging the team id: " + pickID)
-    
+    const data = {
+      game: gameID,
+      team: this.state.userteam.id, //owner's team ID
+      pick: pickID
+    }
+    if (this.pickExists(gameID)) {
+      console.log("PATCH time for picks!")
+    } else {
+      this.axiosPostPick(data)
+        .then(response => console.log(response))
+        .then(() => this.isPickSelected(gameID, pickID))
+        .catch(error => console.log(error))
+    }    
+  }
+  
+  pickExists = (gameID) => {
+    const picks = this.state.picks
+    if (picks) {
+      const games = picks.map(pick => {
+        return pick.game
+      })
+      if (games.includes(gameID)) {
+        return true
+      } else {
+        return false
+      }
+    }
   }
   
   isPickSelected = (gameID, pickID) => {
@@ -133,7 +174,8 @@ class Picks extends Component {
 
 const mapStateToProps = (state) => ({
   isAuthenticated: isAuthenticated(state),
-  token: accessToken(state)
+  token: accessToken(state),
+  userID: theUser(state)
 })
 
 export default connect(mapStateToProps, null)(Picks)
