@@ -8,6 +8,8 @@ const pickColorer = (code) => {
       return 'rgba(255, 0, 0, .75)'
     case 'T':
       return 'rgba(255, 255, 0, .75)'
+    default:
+      return 'none'
   }
 }
 
