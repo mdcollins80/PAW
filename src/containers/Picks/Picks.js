@@ -29,6 +29,11 @@ const GameRow = styled(Row)`
 
 class Picks extends Component {
   state = {
+    config: {
+      headers: {
+        'Authorization': 'JWT ' + this.props.token
+      }
+    },
     weeks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
     games: null,
     selectedWeek: 1,
@@ -47,13 +52,10 @@ class Picks extends Component {
   
   
   componentDidMount () {
-    const config = {
-      headers: {'Authorization': 'JWT ' + this.props.token}
-    }
     console.log('componentDidMount')
     if (!JSON.parse(localStorage.getItem('games'))) {
       console.log('trying the axios dual get request')
-      axios.all([this.axiosGetRequest('/api/userteams/', config), this.axiosGetRequest('/api/games/', config), this.axiosGetRequest('/api/userpicks/', config)])
+      axios.all([this.axiosGetRequest('/api/userteams/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicks/')])
         .then(axios.spread((teams, games, picks) => {
           const userteam = teams.data.filter(team => {
             return team.owner === this.props.userID
@@ -63,7 +65,7 @@ class Picks extends Component {
         .then(() => localStorage.setItem('games', JSON.stringify(this.state.games)))
         .catch(error => console.log(error))
     } else {
-      axios.all([this.axiosGetRequest('/api/userteams/', config), this.axiosGetRequest('/api/userpicks/', config)])
+      axios.all([this.axiosGetRequest('/api/userteams/'), this.axiosGetRequest('/api/userpicks/')])
         .then(axios.spread((teams, picks) => {
           const userteam = teams.data.filter(team => {
             return team.owner === this.props.userID
@@ -75,15 +77,12 @@ class Picks extends Component {
     }
   }
   
-  axiosGetRequest = (url, config) => {
-    return axios.get(process.env.REACT_APP_API_URL + url, config)
+  axiosGetRequest = (url) => {
+    return axios.get(process.env.REACT_APP_API_URL + url, this.state.config)
   }
   
   axiosPostPick = (data) => {
-    const config = {
-      headers: {'Authorization': 'JWT ' + this.props.token}
-    }
-    return axios.post(process.env.REACT_APP_API_URL + '/api/userpicks/', data, config)
+    return axios.post(process.env.REACT_APP_API_URL + '/api/userpicksPost/', data, this.state.config)
   }
   
   weekSelect = (week) => {
@@ -101,6 +100,7 @@ class Picks extends Component {
     } else {
       this.axiosPostPick(data)
         .then(response => console.log(response))
+        .then(() => this.axiosGetRequest('/api/userpicks/'))
         .then(() => this.isPickSelected(gameID, pickID))
         .catch(error => console.log(error))
     }    
@@ -124,10 +124,10 @@ class Picks extends Component {
     const picks = this.state.picks
     if (picks) {
       const pick = picks.filter(pick => {
-        return pick.game === gameID
+        return pick.game.id === gameID
       })
       if (pick[0]) {
-        if (pick[0].pick === pickID) {
+        if (pick[0].pick.id === pickID) {
           return true
         } else {
           return false
