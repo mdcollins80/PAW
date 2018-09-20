@@ -10,6 +10,7 @@ import H1 from '../../components/H1/H1'
 import Select from '../../components/Select/Select'
 import Button from '../../components/Button/Button'
 import Picker from '../../components/Picker/Picker'
+import pickColorer from '../../helpers/pickColorer'
 
 const PicksContainer = styled.div`
   display: flex;
@@ -25,6 +26,7 @@ const GameRow = styled(Row)`
   display: flex;
   justify-content: space-around;
   align-items: center;
+  background: ${props => pickColorer(props.pickiscorrect)};
 `
 
 class Picks extends Component {
@@ -41,14 +43,7 @@ class Picks extends Component {
     userteam: null
   }
   
-  // onClick, check if a pick exists for this game already.  if it doesn't, 
-  // POST request to select that team to win...BUT NEEDS TO UPDATE PICKS IN STATE TO PREVENT MULTIPLE POSTS!!!
-  // if it does, PATCH request to update the pick.  POST and PATCH if and only 
-  // if it is NOT past kickoff time.
-  // pull the userpicks and highlight the teams they have chosen.  -- AGAIN, THIS WILL ONLY HAPPEN IF THE STATE.PICKS IS UPDATED
-  // 
-  // when there is a winner for the game, highlight the row in green for a match
-  // red for a wrong pick
+  // POST, PATCH, DELETE if and only if it is NOT past kickoff time.
   
   
   componentDidMount () {
@@ -171,6 +166,30 @@ class Picks extends Component {
     }
   }
   
+  checkPickCorrect = (gameID, winnerID) => {
+    if (winnerID) {
+      const picks = this.state.picks
+      if (picks) {
+        const pick = picks.filter(pick => {
+          return pick.game.id === gameID
+        })
+        if (pick[0]) {
+          if (pick[0].pick.id === winnerID) {
+            return 'W'
+          } else {
+            return 'L'
+          }
+        } else {
+          return 'X'
+        }
+      }
+    } else if (winnerID === 0) {
+      return 'T'
+    } else {
+      return 'X'
+    }
+  }
+  
   render () {
     return (
       <PicksContainer>
@@ -180,7 +199,8 @@ class Picks extends Component {
         <Box buffer='small'>
             {this.state.games ? this.state.games.filter(game => game.week_num === parseInt(this.state.selectedWeek, 10))
               .map(game => (
-                <GameRow key={game.id}>
+                <GameRow key={game.id}
+                         pickiscorrect={this.checkPickCorrect(game.id, game.winner)}>
                   <Col xs={1}>
                     <p>{game.id}</p>
                   </Col>
