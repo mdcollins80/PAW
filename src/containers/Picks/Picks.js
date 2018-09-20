@@ -85,6 +85,17 @@ class Picks extends Component {
     return axios.post(process.env.REACT_APP_API_URL + '/api/userpicksPost/', data, this.state.config)
   }
   
+  axiosPatchPick = (data, id) => {
+    console.log(data)
+    console.log(id)
+    return axios.patch(process.env.REACT_APP_API_URL + '/api/userpicksPost/' + id + '/', data, this.state.config)
+  }
+  
+  
+  axiosDeletePick = (id) => {
+    return axios.delete(process.env.REACT_APP_API_URL + '/api/userpicks/' + id + '/', this.state.config)
+  }
+  
   weekSelect = (week) => {
     this.setState({selectedWeek: week})
   }
@@ -95,27 +106,51 @@ class Picks extends Component {
       team: this.state.userteam.id, //owner's team ID
       pick: pickID
     }
-    if (this.pickExists(gameID)) {
-      console.log("PATCH time for picks!")
-    } else {
-      this.axiosPostPick(data)
-        .then(response => console.log(response))
-        .then(() => this.axiosGetRequest('/api/userpicks/'))
-        .then(() => this.isPickSelected(gameID, pickID))
-        .catch(error => console.log(error))
-    }    
+    
+    const picks = this.state.picks
+    
+    if (picks) {
+      const exactMatch = picks.filter(pick => {
+        return pick.game.id === gameID && pick.pick.id === pickID
+      })
+      const looseMatch = picks.filter(pick => {
+        return pick.game.id === gameID
+      })
+      if (exactMatch[0]) {
+        this.axiosDeletePick(exactMatch[0].id)
+          .then(() => this.axiosGetRequest('/api/userpicks/')
+            .then(response => this.setState({picks: response.data}))
+          )
+      } else if (looseMatch[0]) {
+        this.axiosPatchPick(data, looseMatch[0].id)
+          .then(response => console.log(response))
+          .then(() => this.axiosGetRequest('/api/userpicks/')
+            .then(response => this.setState({picks: response.data}))
+          )
+      } else {
+        this.axiosPostPick(data)
+          .then(() => this.axiosGetRequest('/api/userpicks/')
+            .then(response => this.setState({picks: response.data}))
+          )
+      }
+    }
   }
-  
-  pickExists = (gameID) => {
+    
+  pickChecker = (gameID, pickID) => {
     const picks = this.state.picks
     if (picks) {
-      const games = picks.map(pick => {
-        return pick.game
+      const gamePick = picks.filter(pick => {
+        return pick.game.id === gameID && pick.pick.id === pickID
       })
-      if (games.includes(gameID)) {
-        return true
+      const games = picks.map(pick => {
+        return pick.game.id
+      })
+      if (gamePick[0]) {
+        return 'DELETE'
+      } else if (games.includes(gameID)) {
+        return 'PATCH'
       } else {
-        return false
+        return 'POST'
       }
     }
   }
@@ -146,18 +181,18 @@ class Picks extends Component {
             {this.state.games ? this.state.games.filter(game => game.week_num === parseInt(this.state.selectedWeek, 10))
               .map(game => (
                 <GameRow key={game.id}>
-                  <Col>
+                  <Col xs={1}>
                     <p>{game.id}</p>
                   </Col>
-                  <Col>
+                  <Col xs={4}>
                     <Picker clicked={() => this.onPickSelect(game.id, game.away_team.id)} 
                             selected={this.isPickSelected(game.id, game.away_team.id)} 
                             teamname={game.away_team.name} />
                   </Col>
-                  <Col>
+                  <Col xs={1}>
                     @
                   </Col>
-                  <Col>
+                  <Col xs={4}>
                     <Picker clicked={() => this.onPickSelect(game.id, game.home_team.id)} 
                             selected={this.isPickSelected(game.id, game.home_team.id)} 
                             teamname={game.home_team.name} />
