@@ -9,7 +9,6 @@ const Picker = styled.select`
 const Select = (props) => {
   return (
     <Picker onChange={props.handleSelect}>
-      <option value="">Pick a Week</option>
       {props.options.map((opt, index) => (
         <option key={index} value={opt}>{'Week ' + opt}</option>
       ))}
