@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { Switch, Route } from 'react-router-dom'
 import styled from 'styled-components'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
 
 import Navbar from './components/NavBar/NavBar'
 import PrivateRoute from './containers/PrivateRoute/PrivateRoute'
@@ -10,7 +12,7 @@ import Register from './containers/Register/Register'
 import Picks from './containers/Picks/Picks'
 import Team from './containers/Team/Team'
 
-
+library.add(faLock)
 
 const AppBody = styled.div`
   padding-top: 75px;

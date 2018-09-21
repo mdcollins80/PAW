@@ -4,6 +4,7 @@ import { isAuthenticated, accessToken, theUser } from '../../reducers/'
 import axios from 'axios'
 import styled from 'styled-components'
 import { Row, Col } from 'react-flexbox-grid'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import Box from '../../components/Box/Box'
 import H1 from '../../components/H1/H1'
@@ -31,6 +32,7 @@ const GameRow = styled(Row)`
     border-bottom: none;
   }
   display: flex;
+  height: 50px;
   justify-content: space-around;
 `
 
@@ -222,7 +224,7 @@ class Picks extends Component {
                 <GameRow key={game.id}
                          pickiscorrect={this.checkPickCorrect(game.id, game.winner)}>
                   <Col xs={1}>
-                    <p>{this.didGameKickoff(game.kickoff) ? "XXX" : game.id}</p>
+                    {this.didGameKickoff(game.kickoff) ? <FontAwesomeIcon icon="lock" /> : <p>{game.id}</p>}
                   </Col>
                   <Col xs={4}>
                     <Picker clicked={() => this.onPickSelect(game.kickoff, game.id, game.away_team.id)} 
