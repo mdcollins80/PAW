@@ -11,6 +11,7 @@ import Select from '../../components/Select/Select'
 import Button from '../../components/Button/Button'
 import Picker from '../../components/Picker/Picker'
 import pickColorer from '../../helpers/pickColorer'
+import weekSelector from '../../helpers/weekSelector'
 
 const PicksContainer = styled.div`
   display: flex;
@@ -23,10 +24,14 @@ const WeekPicker = styled(Select)`
 `
 
 const GameRow = styled(Row)`
-  display: flex;
-  justify-content: space-around;
   align-items: center;
   background: ${props => pickColorer(props.pickiscorrect)};
+  border-bottom: 1px solid black;
+  &:last-child {
+    border-bottom: none;
+  }
+  display: flex;
+  justify-content: space-around;
 `
 
 class Picks extends Component {
@@ -38,16 +43,18 @@ class Picks extends Component {
     },
     weeks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
     games: null,
-    selectedWeek: 1,
+    selectedWeek: weekSelector(),
     picks: null,
     userteam: null
   }
   
-  // POST, PATCH, DELETE if and only if it is NOT past kickoff time.
+  // add a fontawesome logo for the locked picks
+  // add a function to select the current pick week (if today is between Tuesdays)
+  
   
   
   componentDidMount () {
-    console.log('componentDidMount')
+    console.log(weekSelector())
     if (!JSON.parse(localStorage.getItem('games'))) {
       console.log('trying the axios dual get request')
       axios.all([this.axiosGetRequest('/api/userteams/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicksOwned/')])
@@ -95,39 +102,43 @@ class Picks extends Component {
     this.setState({selectedWeek: week})
   }
   
-  onPickSelect = (gameID, pickID) => {
-    const data = {
-      game: gameID,
-      team: this.state.userteam.id, //owner's team ID
-      pick: pickID
-    }
-    
-    const picks = this.state.picks
-    
-    if (picks) {
-      const exactMatch = picks.filter(pick => {
-        return pick.game.id === gameID && pick.pick.id === pickID
-      })
-      const looseMatch = picks.filter(pick => {
-        return pick.game.id === gameID
-      })
-      if (exactMatch[0]) {
-        this.axiosDeletePick(exactMatch[0].id)
-          .then(() => this.axiosGetRequest('/api/userpicksOwned/')
-            .then(response => this.setState({picks: response.data}))
-          )
-      } else if (looseMatch[0]) {
-        this.axiosPatchPick(data, looseMatch[0].id)
-          .then(response => console.log(response))
-          .then(() => this.axiosGetRequest('/api/userpicksOwned/')
-            .then(response => this.setState({picks: response.data}))
-          )
-      } else {
-        this.axiosPostPick(data)
-          .then(() => this.axiosGetRequest('/api/userpicksOwned/')
-            .then(response => this.setState({picks: response.data}))
-          )
+  onPickSelect = (kickoff, gameID, pickID) => {
+    if (Date.now() - Date.parse(kickoff) < 0) {
+      const data = {
+        game: gameID,
+        team: this.state.userteam.id, //owner's team ID
+        pick: pickID
       }
+      
+      const picks = this.state.picks
+      
+      if (picks) {
+        const exactMatch = picks.filter(pick => {
+          return pick.game.id === gameID && pick.pick.id === pickID
+        })
+        const looseMatch = picks.filter(pick => {
+          return pick.game.id === gameID
+        })
+        if (exactMatch[0]) {
+          this.axiosDeletePick(exactMatch[0].id)
+            .then(() => this.axiosGetRequest('/api/userpicksOwned/')
+              .then(response => this.setState({picks: response.data}))
+            )
+        } else if (looseMatch[0]) {
+          this.axiosPatchPick(data, looseMatch[0].id)
+            .then(response => console.log(response))
+            .then(() => this.axiosGetRequest('/api/userpicksOwned/')
+              .then(response => this.setState({picks: response.data}))
+            )
+        } else {
+          this.axiosPostPick(data)
+            .then(() => this.axiosGetRequest('/api/userpicksOwned/')
+              .then(response => this.setState({picks: response.data}))
+            )
+        }
+      }
+    } else {
+      alert("Can't make changes after kickoff!")
     }
   }
     
@@ -190,11 +201,20 @@ class Picks extends Component {
     }
   }
   
+  didGameKickoff = (kickoff) => {
+    if (Date.now() - Date.parse(kickoff) > 0) {
+      return true
+    } else {
+      return false
+    }
+  }
+  
   render () {
     return (
       <PicksContainer>
         <H1>Your Picks</H1>
         <WeekPicker options={this.state.weeks}
+                    initial={this.state.selectedWeek}
                     handleSelect={(event) => this.weekSelect(event.target.value)}/>
         <Box buffer='small'>
             {this.state.games ? this.state.games.filter(game => game.week_num === parseInt(this.state.selectedWeek, 10))
@@ -202,10 +222,10 @@ class Picks extends Component {
                 <GameRow key={game.id}
                          pickiscorrect={this.checkPickCorrect(game.id, game.winner)}>
                   <Col xs={1}>
-                    <p>{game.id}</p>
+                    <p>{this.didGameKickoff(game.kickoff) ? "XXX" : game.id}</p>
                   </Col>
                   <Col xs={4}>
-                    <Picker clicked={() => this.onPickSelect(game.id, game.away_team.id)} 
+                    <Picker clicked={() => this.onPickSelect(game.kickoff, game.id, game.away_team.id)} 
                             selected={this.isPickSelected(game.id, game.away_team.id)} 
                             teamname={game.away_team.name} />
                   </Col>
@@ -213,7 +233,7 @@ class Picks extends Component {
                     @
                   </Col>
                   <Col xs={4}>
-                    <Picker clicked={() => this.onPickSelect(game.id, game.home_team.id)} 
+                    <Picker clicked={() => this.onPickSelect(game.kickoff, game.id, game.home_team.id)} 
                             selected={this.isPickSelected(game.id, game.home_team.id)} 
                             teamname={game.home_team.name} />
                   </Col>
