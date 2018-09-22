@@ -59,7 +59,7 @@ class Picks extends Component {
     console.log(weekSelector())
     if (!JSON.parse(localStorage.getItem('games'))) {
       console.log('trying the axios dual get request')
-      axios.all([this.axiosGetRequest('/api/userteams/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicksOwned/')])
+      axios.all([this.axiosGetRequest('/api/userteams?myteam=myteam/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicksOwned/')])
         .then(axios.spread((teams, games, picks) => {
           const userteam = teams.data.filter(team => {
             return team.owner === this.props.userID
@@ -69,7 +69,7 @@ class Picks extends Component {
         .then(() => localStorage.setItem('games', JSON.stringify(this.state.games)))
         .catch(error => console.log(error))
     } else {
-      axios.all([this.axiosGetRequest('/api/userteams/'), this.axiosGetRequest('/api/userpicksOwned/')])
+      axios.all([this.axiosGetRequest('/api/userteams?myteam=myteam/'), this.axiosGetRequest('/api/userpicksOwned/')])
         .then(axios.spread((teams, picks) => {
           const userteam = teams.data.filter(team => {
             return team.owner === this.props.userID

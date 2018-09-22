@@ -5,26 +5,21 @@ import axios from 'axios'
 
 class Team extends Component {
   state = {
+    config: {
+      headers: {
+        'Authorization': 'JWT ' + this.props.token
+      }
+    },
     teamName: '',
     team: null
   }
   
   componentDidMount () {
-    console.log("this.props.token")
-    console.log(this.props.token)
-    
-    const config = {
-      headers: {'Authorization': 'JWT ' + this.props.token}
-    }
-  
-    axios.get(process.env.REACT_APP_API_URL + '/api/userteams/', config)
+    axios.get(process.env.REACT_APP_API_URL + '/api/userteams?myteam=myteam/', this.state.config)
       .then(response => {
-        console.log(response)
-        console.log(response.data)
-        this.setState({team: response.data[0]})
-      })
-      .then(() => {
-        this.setState({teamName: this.state.team.team_name})
+        if (response.data.length > 0) {
+          this.setState({team: response.data[0], teamName: response.data[0].team_name})
+        }
       })
       .catch(error => console.log(error))
 
@@ -34,28 +29,20 @@ class Team extends Component {
   
   handleChange = (event) => {
     this.setState({[event.target.name]: event.target.value})
-    console.log(this.state[event.target.name])
   }
   
   handleSubmit = (event) => {
     event.preventDefault()
-    console.log(event)
   }
   
-  createTeam () {
+  createTeam = () => {
     // axios POST with this league id and user id
-    const config = {
-      headers: {'Authorization': 'JWT ' + this.props.token}
-    }
-    
     const data = {
       owner: this.props.userID,
       league: 1,
       team_name: this.state.teamName
     }
-    console.log("createTeam fired")
-    console.log(data)
-    axios.post(process.env.REACT_APP_API_URL + `/api/userteams/`, data, config)
+    axios.post(process.env.REACT_APP_API_URL + `/api/userteams/`, data, this.state.config)
       .then(response => console.log(response))
   }
   
@@ -71,8 +58,6 @@ class Team extends Component {
       league: this.state.team.league,
       team_name: this.state.teamName
     }
-    console.log('updateTeam fired')
-    console.log(data)
     axios.patch(process.env.REACT_APP_API_URL + `/api/userteams/` + this.state.team.id + '/', data, config)
       .then(response => console.log(response))
   }
@@ -82,7 +67,6 @@ class Team extends Component {
     const config = {
       headers: {'Authorization': 'JWT ' + this.props.token}
     }
-    console.log('deleteTeam fired')
     axios.delete(process.env.REACT_APP_API_URL + `/api/userteams/` + this.state.team.id, config)
       .then(response => console.log(response))
       .then(this.setState({team_name: '', team: null}))
@@ -107,11 +91,6 @@ class Team extends Component {
           </button>
         </form>
       </React.Fragment>
-      // show team name
-      // have dynamic button
-      // if team exists for user, button is PATCH
-      // if no team exists, button is POST
-      
     )
   }
 }
