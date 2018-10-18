@@ -26,21 +26,32 @@ const Wins = styled.p`
   text-align: center;
 `
 
+const ScoreRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+`
+
 class Home extends Component {
   state = {
-    userteams: null
+    config: {
+      headers: {
+        'Authorization': 'JWT ' + this.props.token
+      }
+    },
+    userteams: null,
+    userpicks: null
   }
   
-  componentDidMount () {
-    const config = {
-      headers: {'Authorization': 'JWT ' + this.props.token}
-    }
-    
-    axios.get(process.env.REACT_APP_API_URL + `/api/userteams/`, config)
-      .then(response => {
-        this.setState({userteams: response.data})
-      })
+  componentDidMount () {      
+    axios.all([this.axiosGetRequest('/api/userteams/'), this.axiosGetRequest('/api/userpicks/')])
+      .then(axios.spread((teams, picks) => {
+        this.setState({userteams: teams.data, userpicks: picks.data})
+      }))
       .catch(error => console.log(error))
+  }
+  
+  axiosGetRequest = (url) => {
+    return axios.get(process.env.REACT_APP_API_URL + url, this.state.config)
   }
   
   render() {
@@ -50,16 +61,16 @@ class Home extends Component {
         <Box>
           <Row>
             <ColX xs={10}>
-              <Heading>Team Name</Heading>
+              <ScoreRow>
+                <Heading>Team Name</Heading>
+                <Heading>Wins</Heading>
+              </ScoreRow>
               {this.state.userteams ? this.state.userteams.map((team, index) => (
-                <p key={index}>{team.team_name}</p>
+                <ScoreRow>
+                  <p key={index}>{team.team_name}</p>
+                  <Wins>{this.state.userpicks.filter(pick => pick.team.id === team.id && pick.correct === 1).length}</Wins>
+                </ScoreRow>
               )) : 'loading...'}
-            </ColX>
-            <ColX xs={2}>
-              <Heading>Wins</Heading>
-              {this.state.userteams ? this.state.userteams.map((team, index) => (
-                <Wins key={index}>##</Wins>
-              )) : ''}
             </ColX>
           </Row>
         </Box>
