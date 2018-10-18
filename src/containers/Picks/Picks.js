@@ -47,6 +47,7 @@ class Picks extends Component {
     games: null,
     selectedWeek: weekSelector(),
     picks: null,
+    pickGameIDs: null,
     userteam: null
   }
   
@@ -61,20 +62,18 @@ class Picks extends Component {
       console.log('trying the axios dual get request')
       axios.all([this.axiosGetRequest('/api/userteams?myteam=myteam/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicksOwned/')])
         .then(axios.spread((teams, games, picks) => {
-          const userteam = teams.data.filter(team => {
-            return team.owner === this.props.userID
-          })
-          this.setState({userteam: userteam[0], games: games.data, picks: picks.data})
+          const userteam = teams.data.find(team => team.owner === this.props.userID)
+          const pickGameIDs = picks.data.map(pick => pick.game.id)
+          this.setState({userteam: userteam, games: games.data, picks: picks.data, pickGameIDs: pickGameIDs})
         }))
         .then(() => localStorage.setItem('games', JSON.stringify(this.state.games)))
         .catch(error => console.log(error))
     } else {
       axios.all([this.axiosGetRequest('/api/userteams?myteam=myteam/'), this.axiosGetRequest('/api/userpicksOwned/')])
         .then(axios.spread((teams, picks) => {
-          const userteam = teams.data.filter(team => {
-            return team.owner === this.props.userID
-          })
-          this.setState({userteam: userteam[0], picks: picks.data})
+          const userteam = teams.data.find(team => team.owner === this.props.userID)
+          const pickGameIDs = picks.data.map(pick => pick.game.id)
+          this.setState({userteam: userteam, picks: picks.data, pickGameIDs: pickGameIDs})
         }))
         .catch(error => console.log(error))
       this.setState({games: JSON.parse(localStorage.getItem('games'))})
@@ -90,11 +89,8 @@ class Picks extends Component {
   }
   
   axiosPatchPick = (data, id) => {
-    console.log(data)
-    console.log(id)
     return axios.patch(process.env.REACT_APP_API_URL + '/api/userpicksPost/' + id + '/', data, this.state.config)
   }
-  
   
   axiosDeletePick = (id) => {
     return axios.delete(process.env.REACT_APP_API_URL + '/api/userpicks/' + id + '/', this.state.config)
@@ -114,46 +110,66 @@ class Picks extends Component {
       
       const picks = this.state.picks
       
+      // original determiner of POST, PATCH, or DELETE:
       if (picks) {
-        const exactMatch = picks.filter(pick => {
-          return pick.game.id === gameID && pick.pick.id === pickID
-        })
-        const looseMatch = picks.filter(pick => {
-          return pick.game.id === gameID
-        })
-        if (exactMatch[0]) {
-          this.axiosDeletePick(exactMatch[0].id)
-            .then(() => this.axiosGetRequest('/api/userpicksOwned/')
-              .then(response => this.setState({picks: response.data}))
-            )
-        } else if (looseMatch[0]) {
-          this.axiosPatchPick(data, looseMatch[0].id)
+        const exactMatch = picks.find(pick => pick.game.id === gameID && pick.pick.id === pickID)
+        const looseMatch = picks.find(pick => pick.game.id === gameID)
+        
+        if (exactMatch) {
+          this.axiosDeletePick(exactMatch.id)
             .then(response => console.log(response))
-            .then(() => this.axiosGetRequest('/api/userpicksOwned/')
-              .then(response => this.setState({picks: response.data}))
-            )
+            .then(() => {
+              const updatedPicks = picks.filter(pick => pick.id !== exactMatch.id)
+              this.setState({picks: updatedPicks})
+            })
+        } else if (looseMatch) {
+          this.axiosPatchPick(data, looseMatch.id)
+            .then(response => {
+              console.log(response)
+              const patchPick = {
+                id: response.data.id,
+                team: { id: response.data.team },
+                game: { id: response.data.game },
+                pick: { id: response.data.pick },
+                correct: null
+              }
+              const updatedPicks = picks.filter(pick => pick.id !== looseMatch.id)
+              updatedPicks.push(patchPick)
+              this.setState({picks: updatedPicks})
+            })
         } else {
           this.axiosPostPick(data)
-            .then(() => this.axiosGetRequest('/api/userpicksOwned/')
-              .then(response => this.setState({picks: response.data}))
-            )
+            .then(response => {
+              console.log(response)
+              const newPick = {
+                id: response.data.id,
+                team: { id: response.data.team },
+                game: { id: response.data.game },
+                pick: { id: response.data.pick },
+                correct: null
+              }
+              const updatedPicks = this.state.picks
+              updatedPicks.push(newPick)
+              this.setState({picks: updatedPicks})
+            })
         }
       }
     } else {
       alert("Can't make changes after kickoff!")
     }
   }
-    
+  
+  // checks to see if pick has already been made.  If a pick has been made and
+  // the user selects it again, the pick is DELETEd.  If a pick has been made
+  // and the user selects the other team, the pick is PATCHed.  Otherwise if the 
+  // pick hasn't been made, the pick is POSTed.
   pickChecker = (gameID, pickID) => {
     const picks = this.state.picks
     if (picks) {
-      const gamePick = picks.filter(pick => {
-        return pick.game.id === gameID && pick.pick.id === pickID
-      })
-      const games = picks.map(pick => {
-        return pick.game.id
-      })
-      if (gamePick[0]) {
+      const gamePick = picks.find(pick => pick.game.id === gameID && pick.pick.id === pickID)
+      const games = this.state.pickGameIDs
+      
+      if (gamePick) {
         return 'DELETE'
       } else if (games.includes(gameID)) {
         return 'PATCH'
@@ -162,35 +178,50 @@ class Picks extends Component {
       }
     }
   }
+  // original isPickSelected with filter function
+  // 
+  // isPickSelected = (gameID, pickID) => {
+  //   const picks = this.state.picks
+  //   if (picks) {
+  //     const pick = picks.filter(pick => {
+  //       return pick.game.id === gameID
+  //     })
+  //     if (pick[0]) {
+  //       if (pick[0].pick.id === pickID) {
+  //         return true
+  //       } else {
+  //         return false
+  //       }
+  //     }
+  //   }
+  // }
   
+  // attempting to speed up process with find function
   isPickSelected = (gameID, pickID) => {
     const picks = this.state.picks
     if (picks) {
-      const pick = picks.filter(pick => {
-        return pick.game.id === gameID
-      })
-      if (pick[0]) {
-        if (pick[0].pick.id === pickID) {
-          return true
-        } else {
-          return false
-        }
+      const pick = picks.find(pick => pick.game.id === gameID)
+      if (pick && pick.pick.id === pickID) {
+        return true
+      } else {
+        return false
       }
     }
   }
   
+  // this should be replaced.  Picks has a 'correct' property now.
   checkPickCorrect = (gameID, winnerID) => {
     if (winnerID) {
       const picks = this.state.picks
       if (picks) {
-        const pick = picks.filter(pick => {
-          return pick.game.id === gameID
-        })
-        if (pick[0]) {
-          if (pick[0].pick.id === winnerID) {
+        const pick = picks.find(pick => pick.game.id === gameID)
+        if (pick) {
+          if (pick.pick.correct === 1) {
             return 'W'
-          } else {
+          } else if (pick.pick.correct === 0) {
             return 'L'
+          } else {
+            return 'X'
           }
         } else {
           return 'X'
