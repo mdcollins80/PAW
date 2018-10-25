@@ -57,14 +57,19 @@ class Picks extends Component {
   
   
   componentDidMount () {
-    console.log(weekSelector())
     if (!JSON.parse(localStorage.getItem('games'))) {
-      console.log('trying the axios dual get request')
       axios.all([this.axiosGetRequest('/api/userteams?myteam=myteam/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicksOwned/')])
         .then(axios.spread((teams, games, picks) => {
           const userteam = teams.data.find(team => team.owner === this.props.userID)
+          const gamesWithWins = games.data.map(game => {
+            const pick = picks.data.find(pick => pick.game.id === game.id)
+            if (pick) {
+              game.correct = pick.correct
+            }
+            return game
+          })
           const pickGameIDs = picks.data.map(pick => pick.game.id)
-          this.setState({userteam: userteam, games: games.data, picks: picks.data, pickGameIDs: pickGameIDs})
+          this.setState({userteam: userteam, games: gamesWithWins, picks: picks.data, pickGameIDs: pickGameIDs})
         }))
         .then(() => localStorage.setItem('games', JSON.stringify(this.state.games)))
         .catch(error => console.log(error))
@@ -159,44 +164,6 @@ class Picks extends Component {
     }
   }
   
-  // checks to see if pick has already been made.  If a pick has been made and
-  // the user selects it again, the pick is DELETEd.  If a pick has been made
-  // and the user selects the other team, the pick is PATCHed.  Otherwise if the 
-  // pick hasn't been made, the pick is POSTed.
-  pickChecker = (gameID, pickID) => {
-    const picks = this.state.picks
-    if (picks) {
-      const gamePick = picks.find(pick => pick.game.id === gameID && pick.pick.id === pickID)
-      const games = this.state.pickGameIDs
-      
-      if (gamePick) {
-        return 'DELETE'
-      } else if (games.includes(gameID)) {
-        return 'PATCH'
-      } else {
-        return 'POST'
-      }
-    }
-  }
-  // original isPickSelected with filter function
-  // 
-  // isPickSelected = (gameID, pickID) => {
-  //   const picks = this.state.picks
-  //   if (picks) {
-  //     const pick = picks.filter(pick => {
-  //       return pick.game.id === gameID
-  //     })
-  //     if (pick[0]) {
-  //       if (pick[0].pick.id === pickID) {
-  //         return true
-  //       } else {
-  //         return false
-  //       }
-  //     }
-  //   }
-  // }
-  
-  // attempting to speed up process with find function
   isPickSelected = (gameID, pickID) => {
     const picks = this.state.picks
     if (picks) {
@@ -209,28 +176,18 @@ class Picks extends Component {
     }
   }
   
-  // this should be replaced.  Picks has a 'correct' property now.
-  checkPickCorrect = (gameID, winnerID) => {
-    if (winnerID) {
-      const picks = this.state.picks
-      if (picks) {
-        const pick = picks.find(pick => pick.game.id === gameID)
-        if (pick) {
-          if (pick.correct === 1) {
-            return 'W'
-          } else if (pick.correct === 0) {
-            return 'L'
-          } else {
-            return 'X'
-          }
-        } else {
-          return 'X'
-        }
+  checkPickCorrect = (winner, correct) => {
+    console.log(winner, correct)
+    if (winner) {
+      if (correct === 1) {
+        return "W"
+      } else if (correct === 0) {
+        return "L"
       }
-    } else if (winnerID === 0) {
-      return 'T'
+    } else if (winner === 0) {
+      return "T"
     } else {
-      return 'X'
+      return "X"
     }
   }
   
@@ -253,11 +210,11 @@ class Picks extends Component {
             {this.state.games ? this.state.games.filter(game => game.week_num === parseInt(this.state.selectedWeek, 10))
               .map(game => (
                 <GameRow key={game.id}
-                         pickiscorrect={this.checkPickCorrect(game.id, game.winner)}>
+                         pickiscorrect={this.checkPickCorrect(game.winner, game.correct)}>
                   <Col xs={1}>
                     {this.didGameKickoff(game.kickoff) ? <FontAwesomeIcon icon="lock" /> : <p>{game.id}</p>}
                   </Col>
-                  <Col xs={4}>
+                  <Col xs={5}>
                     <Picker clicked={() => this.onPickSelect(game.kickoff, game.id, game.away_team.id)} 
                             selected={this.isPickSelected(game.id, game.away_team.id)} 
                             teamname={game.away_team.name} />
@@ -265,7 +222,7 @@ class Picks extends Component {
                   <Col xs={1}>
                     @
                   </Col>
-                  <Col xs={4}>
+                  <Col xs={5}>
                     <Picker clicked={() => this.onPickSelect(game.kickoff, game.id, game.home_team.id)} 
                             selected={this.isPickSelected(game.id, game.home_team.id)} 
                             teamname={game.home_team.name} />
