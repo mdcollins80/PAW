@@ -12,9 +12,15 @@ const HomeContainer = styled.div`
 
 `
 
-const Heading = styled.p`
+const Header = styled.th`
   text-transform: uppercase;
   font-weight: bold;
+  text-align: left;
+`
+
+const Numbers = styled.td`
+  text-align: right;
+  
 `
 
 const ColX = styled(Col)`
@@ -45,7 +51,14 @@ class Home extends Component {
   componentDidMount () {      
     axios.all([this.axiosGetRequest('/api/userteams/'), this.axiosGetRequest('/api/userpicks/')])
       .then(axios.spread((teams, picks) => {
-        this.setState({userteams: teams.data, userpicks: picks.data})
+        const teamsWins = teams.data.map(team => {
+          const teamPicks = picks.data.filter(pick => pick.team.id === team.id)
+          const correctPicks = teamPicks.filter(pick => pick.correct === 1)
+          team.picks = teamPicks.length
+          team.wins = correctPicks.length
+          return team
+        })
+        this.setState({userteams: teamsWins})
       }))
       .catch(error => console.log(error))
   }
@@ -61,16 +74,27 @@ class Home extends Component {
         <Box>
           <Row>
             <ColX xs={10}>
-              <ScoreRow>
-                <Heading>Team Name</Heading>
-                <Heading>Wins</Heading>
-              </ScoreRow>
-              {this.state.userteams ? this.state.userteams.map((team, index) => (
-                <ScoreRow>
-                  <p key={index}>{team.team_name}</p>
-                  <Wins>{this.state.userpicks.filter(pick => pick.team.id === team.id && pick.correct === 1).length}</Wins>
-                </ScoreRow>
-              )) : 'loading...'}
+              <table>
+                <tr>
+                  <Header>Team</Header>
+                  <Header>Picks</Header>
+                  <Header>Wins</Header>
+                  <Header>%</Header>
+                </tr>
+                {this.state.userteams ? this.state.userteams.sort((a,b) => b.wins - a.wins).map((team, index) => {
+                  const winPct = team.wins ? Math.round(team.wins/team.picks * 100) : '-'
+                  return (
+                    <tr key={index}>
+                      <td>{team.team_name}</td>
+                      <Numbers>{team.picks}</Numbers>
+                      <Numbers>{team.wins}</Numbers>
+                      <Numbers>{winPct}%</Numbers>
+                    </tr>
+                  )})
+                 : 'loading...'}
+              </table>
+
+              
             </ColX>
           </Row>
         </Box>
