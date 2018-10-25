@@ -28,15 +28,6 @@ const ColX = styled(Col)`
   padding-right: 10px;
 `
 
-const Wins = styled.p`
-  text-align: center;
-`
-
-const ScoreRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-`
-
 class Home extends Component {
   state = {
     config: {
