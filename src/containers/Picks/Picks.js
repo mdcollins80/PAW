@@ -9,7 +9,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Box from '../../components/Box/Box'
 import H1 from '../../components/H1/H1'
 import Select from '../../components/Select/Select'
-import Button from '../../components/Button/Button'
 import Picker from '../../components/Picker/Picker'
 import pickColorer from '../../helpers/pickColorer'
 import weekSelector from '../../helpers/weekSelector'
@@ -58,7 +57,7 @@ class Picks extends Component {
   
   componentDidMount () {
     if (!JSON.parse(localStorage.getItem('games'))) {
-      axios.all([this.axiosGetRequest('/api/userteams?myteam=myteam/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicksOwned/')])
+      axios.all([this.axiosGetRequest('/api/userteams/?myteam=myteam/'), this.axiosGetRequest('/api/games/'), this.axiosGetRequest('/api/userpicksOwned/')])
         .then(axios.spread((teams, games, picks) => {
           const userteam = teams.data.find(team => team.owner === this.props.userID)
           const gamesWithWins = games.data.map(game => {
@@ -74,7 +73,7 @@ class Picks extends Component {
         .then(() => localStorage.setItem('games', JSON.stringify(this.state.games)))
         .catch(error => console.log(error))
     } else {
-      axios.all([this.axiosGetRequest('/api/userteams?myteam=myteam/'), this.axiosGetRequest('/api/userpicksOwned/')])
+      axios.all([this.axiosGetRequest('/api/userteams/?myteam=myteam/'), this.axiosGetRequest('/api/userpicksOwned/')])
         .then(axios.spread((teams, picks) => {
           const userteam = teams.data.find(team => team.owner === this.props.userID)
           const pickGameIDs = picks.data.map(pick => pick.game.id)

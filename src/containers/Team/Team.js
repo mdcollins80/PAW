@@ -15,7 +15,7 @@ class Team extends Component {
   }
   
   componentDidMount () {
-    axios.get(process.env.REACT_APP_API_URL + '/api/userteams?myteam=myteam/', this.state.config)
+    axios.get(process.env.REACT_APP_API_URL + '/api/userteams/?myteam=myteam/', this.state.config)
       .then(response => {
         if (response.data.length > 0) {
           this.setState({team: response.data[0], teamName: response.data[0].team_name})
