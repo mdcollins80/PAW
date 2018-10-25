@@ -216,9 +216,9 @@ class Picks extends Component {
       if (picks) {
         const pick = picks.find(pick => pick.game.id === gameID)
         if (pick) {
-          if (pick.pick.correct === 1) {
+          if (pick.correct === 1) {
             return 'W'
-          } else if (pick.pick.correct === 0) {
+          } else if (pick.correct === 0) {
             return 'L'
           } else {
             return 'X'
@@ -274,7 +274,6 @@ class Picks extends Component {
               )) : "loading.."
             }
         </Box>
-        <Button>Submit Picks</Button>
       </PicksContainer>
     )
   }
